@@ -158,7 +158,7 @@ RGB led[3];
 
 RGB frontlight(9,10,11);
 RGB backlight(12,13,14);
-const int temp1Pin = A0, temp2Pin = A1, touchPin=23,lcdPin=24;
+const int temp1Pin = A0, temp2Pin = A1, lightPin = A2, touchPin=23,lcdPin=24;
 void setup()
 {
   lcd.begin(16, 2);
@@ -177,7 +177,7 @@ void setup()
   analogReference(EXTERNAL);
   
 }
-unsigned long long incr = 0;
+unsigned short incr = 0;
 void loop()
 {
   int touch=digitalRead(touchPin);
@@ -286,13 +286,18 @@ void loop()
     
     lcd.print(temperature2);
     lcd.setCursor(0,0);
+    
     delay(50);
-    int light = analogRead(A2);
-    //int light = 512;
+    int light = analogRead(lightPin);
+    
     lcd.print(light);
-    String sends = (String)temperature+" "+(String)temperature2+" "+light+" "+curlcd;
+    
     if(incr%5==0)
+    {
+      String sends = (String)temperature+" "+(String)temperature2+" "+light+" "+curlcd;
       Serial1.println(sends);
+      incr=0;
+    }
     Tlc.update();
     delay(50);
     incr++;
