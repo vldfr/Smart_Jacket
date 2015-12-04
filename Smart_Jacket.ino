@@ -1,3 +1,5 @@
+//FDP = FOR DEBUGGING PURPOSES
+
 /*
     Basic Pin setup:
     ------------                                  ---u----
@@ -39,21 +41,13 @@
         XLAT on Arduino  -> XLAT of TLC1  -> XLAT of TLC2  -> ...
     The one exception is that each TLC needs it's own resistor between pin 20
     and GND.
-
-    This library uses the PWM output ability of digital pins 3, 9, 10, and 11.
-    Do not use analogWrite(...) on these pins.
-
-    This sketch does the Knight Rider strobe across a line of LEDs.
-
-    Alex Leone <acleone ~AT~ gmail.com>, 2009-02-03 */
+    */
 
 #include "Tlc5940.h"
-//#include <SoftwareSerial1.h>
-
-//SoftwareSerial1 BT(1,0);
 #include <LiquidCrystal.h>
 #define ON 1
 #define OFF 0
+
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(22, 7, 5, 4, 6, 2);
 
@@ -96,7 +90,7 @@ struct RGB{
     Tlc.set(g_pin, g);
     Tlc.set(b_pin, b);
     Tlc.update();
-    Serial.print(".");
+    //Serial.print(".");                                              //FDP
   }
   void Blink(int r, int g, int b, int dur, int times)
   {
@@ -152,36 +146,45 @@ struct RGB{
   }
 };
 
+//container variables
 String str;
 int Backlights=0, Frontlights=0,prevTouch=-1,curlcd=1;
 RGB led[3];
 
+//pin variables
 RGB frontlight(9,10,11);
 RGB backlight(12,13,14);
 const int temp1Pin = A0, temp2Pin = A1, lightPin = A2, touchPin=23,lcdPin=24;
 void setup()
 {
-  lcd.begin(16, 2);
+
+  //LCD Inits
   pinMode(lcdPin,OUTPUT);
   digitalWrite(lcdPin,HIGH);
+  lcd.begin(16, 2);
   lcd.print("Initialized!");
-  //BT.begin(9600);
+  
+  //Comunication Inits
   Serial1.begin(9600);
   Serial.begin(9600);
+
+  //Leds and TLC Inits
   led[0]=RGB(0,1,2);
   led[1]=RGB(3,4,5);
   led[2]=RGB(6,7,8);
   Tlc.init();
   Tlc.clear();
   Tlc.update();
+
+  //Final preparations
   analogReference(EXTERNAL);
-  
+  delay(500);
 }
 unsigned short incr = 0;
 void loop()
 {
   int touch=digitalRead(touchPin);
-  //Serial.println((String)prevTouch+" - "+(String)touch);
+                                          //Serial.println((String)prevTouch+" - "+(String)touch);      //FDP
   if(prevTouch==-1)
   {
     if(touch==ON)
@@ -262,19 +265,18 @@ void loop()
         {
           for(int i=0;i<3;i++)
             led[i].show(0,0,0);
-          //Serial1.println("Error");
+          //Serial1.println("Error");                                               //FDP
         }
         
     }
     lcd.clear();
     lcd.setCursor(0, 1);
-  // print the number of seconds since reset:
 
     delay(50);
     
     int val = analogRead(temp1Pin);   
     float temperature = (5.0 * val * 100.0)/1024.0;
-    //Serial.println(temperature);
+    //Serial.println(temperature);                                                  //FDP
    
     lcd.print(temperature);
     lcd.setCursor(7, 1);
@@ -294,7 +296,7 @@ void loop()
     
     if(incr%5==0)
     {
-      String sends = (String)temperature+" "+(String)temperature2+" "+light+" "+curlcd;
+      String sends = (String)temperature+" "+temperature2+" "+light+" "+curlcd;
       Serial1.println(sends);
       incr=0;
     }
