@@ -45,7 +45,6 @@
 
 #include "Tlc5940.h"
 #include <LiquidCrystal.h>
-//#include "functionuri.h"
 #define ON 1
 #define OFF 0
 
