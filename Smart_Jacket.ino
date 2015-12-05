@@ -149,7 +149,19 @@ struct RGB{
 //container variables
 String str;
 int Backlights=0, Frontlights=0,prevTouch=-1,curlcd=1;
+int mode=0,curanim=-1, modeincr=-1;
 RGB led[3];
+
+
+const int anim1[5][8] = {
+//  R   G   B  ms  mode led1 led2 led3
+  {255,255,255,200,0,1,1,1},
+  {255, 0, 255,200,1,1,1,1},
+  {255,128,128,200,1,0,1,0},
+  {255,128,128,200,1,1,0,1},
+  (255,255,255,200,1,0,1,0)
+  };
+
 
 //pin variables
 RGB frontlight(9,10,11);
@@ -180,7 +192,7 @@ void setup()
   analogReference(EXTERNAL);
   delay(500);
 }
-unsigned short incr = 0;
+unsigned long incr = 0;
 void loop()
 {
   int touch=digitalRead(touchPin);
@@ -229,8 +241,13 @@ void loop()
         str = Serial1.readStringUntil('S');
         //Serial.println(str);
         if(str=="F")
-          for(int i=0;i<3;i++)
-            led[i].show(255,255,0);
+        {
+          //for(int i=0;i<3;i++)
+          //  led[i].show(255,255,0);
+          mode = 1;
+          curanim=1;
+          modeincr=incr;
+        }
         else if(str=="B")
           for(int i=0;i<3;i++)
             led[i].show(0,0,0);
@@ -269,6 +286,34 @@ void loop()
         }
         
     }
+
+    if(mode)
+    {
+      unsigned int times = incr-modeincr;
+      switch(curanim)
+      {
+        case 1:
+          int animat[8];
+          for(int i = 0;i<8;i++)
+            animat[i] = anim1[times%5][i];
+          short ledson = animat[5]+animat[6]+animat[7];
+          for(int i = 0;i<3;i++)
+          {
+            if(animat[i+5])
+            {
+              if(animat[4]==0)
+              {
+                led[i].show(animat[0],animat[1],animat[2]);
+                delay(animat[3]/ledson);
+              }
+              else if(animat[4]==1)
+                led[i].fade(animat[0],animat[1],animat[2],animat[3]);
+            }
+          }
+      }
+    }
+
+    
     lcd.clear();
     lcd.setCursor(0, 1);
 
@@ -298,7 +343,6 @@ void loop()
     {
       String sends = (String)temperature+" "+temperature2+" "+light+" "+curlcd;
       Serial1.println(sends);
-      incr=0;
     }
     Tlc.update();
     delay(50);
