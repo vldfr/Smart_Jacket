@@ -144,7 +144,49 @@ struct RGB{
     }
     //show(r,g,b);
   }
+  //r,g,b target values
+  void fadeStep(int r, int g, int b, float curStep)
+  {
+    float curR,curG,curB;
+    curR=rVal;
+    curG=gVal;
+    curB=bVal;
+    int difR, difG, difB;
+    difR = rVal-r;
+    difG = gVal-g;
+    difB = bVal-b;
+    float maxSteps = max(abs(difR), max(abs(difG), abs(difB)));
+    float rStep, gStep, bStep;
+    rStep=maxSteps/difR;
+    gStep=maxSteps/difG;
+    bStep=maxSteps/difB;
+    curR-=rStep*curStep;
+    curG-=gStep*curStep;
+    curB-=bStep*curSteps;
+    colorize((int)curR,(int)curG,(int)curB);
+  }
+  float maxSteps(int r, int g, int b)
+  {
+    int difR, difG, difB;
+    difR = rVal-r;
+    difG = gVal-g;
+    difB = bVal-b;
+    return max(abs(difR), max(abs(difG), abs(difB)));
+  }
 };
+
+void fadeSim(RGB leds[], bool ledsOn[], int nrleds, int r[], int g[], int b[])
+{
+  int maximum = -1;
+  for(int i = 0;i<nrleds;i++)
+  {
+    float mex = leds[i].maxSteps(r[i],g[i],b[i])
+    if(ledsOn[i]&&>maximum)
+      maximum = mex;
+  }
+  //maxstepul fiecaruia/maxsteps este curstepul fiecaruia
+}
+
 
 //container variables
 String str;
@@ -313,30 +355,26 @@ void loop()
       }
     }
 
-    
-    lcd.clear();
-    lcd.setCursor(0, 1);
-
     delay(50);
     
     int val = analogRead(temp1Pin);   
     float temperature = (5.0 * val * 100.0)/1024.0;
     //Serial.println(temperature);                                                  //FDP
-   
-    lcd.print(temperature);
-    lcd.setCursor(7, 1);
-
+    
     delay(50);
     
     val = analogRead(temp2Pin);   
     float temperature2 = (5.0 * val * 100.0)/1024.0;
     
-    lcd.print(temperature2);
-    lcd.setCursor(0,0);
-    
     delay(50);
     int light = analogRead(lightPin);
-    
+
+    lcd.clear();
+    lcd.setCursor(0, 1);
+    lcd.print(temperature);
+    lcd.setCursor(7, 1);
+    lcd.print(temperature2);
+    lcd.setCursor(0,0);    
     lcd.print(light);
     
     if(incr%5==0)
