@@ -131,10 +131,10 @@ struct RGB{
     difB = bVal-b;
     float maxSteps = max(abs(difR), max(abs(difG), abs(difB)));
     float rStep, gStep, bStep;
-    rStep=maxSteps/difR;
-    gStep=maxSteps/difG;
-    bStep=maxSteps/difB;
-    for(int i = 0;i<maxSteps;i++)
+    rStep=difR/maxSteps;
+    gStep=difG/maxSteps;
+    bStep=difB/maxSteps;
+    for(int i = 0;i<=maxSteps;i++)
     {
       curR-=rStep;
       curG-=gStep;
@@ -157,9 +157,9 @@ struct RGB{
     difB = bVal-b;
     float maxSteps = max(abs(difR), max(abs(difG), abs(difB)));
     float rStep, gStep, bStep;
-    rStep=maxSteps/difR;
-    gStep=maxSteps/difG;
-    bStep=maxSteps/difB;
+    rStep=difR/maxSteps;
+    gStep=difG/maxSteps;
+    bStep=difB/maxSteps;
     curR-=rStep*curStep;
     curG-=gStep*curStep;
     curB-=bStep*curStep;
@@ -224,7 +224,7 @@ void fadeSim(struct RGB leds[], bool ledsOn[], int nrleds, int r, int g, int b, 
     for(int j = 0;j<nrleds;j++)
     {
       if(ledsOn[j])
-        leds[j].fadeStep(r,g,b,maxsteps[j]/maximum*i);
+        leds[j].fadeStep(r,g,b,(maxsteps[j]/maximum)*i);
     }
     delayMicroseconds(1000*(float)milis/maximum);
     Tlc.update();
@@ -300,18 +300,19 @@ RGB led[5];
 
 const int anim1[][10] = {
 //  R   G   B  ms mde l1,l2,l3,l4,l5
-  {255,255,255, 50,0, 1, 1, 1, 1, 1},
+  {255,255,255,  50,0, 1, 1, 1, 1, 1},
+  {  0,  0,  0,1000,1, 1, 1, 1, 1, 1},
   
-  {255, 0, 255,100,1, 0, 0, 1, 0, 0},
-  {255, 0, 255,100,1, 0, 1, 0, 1, 0},
-  {255, 0, 255,100,1, 1, 1, 1, 1, 1},
+  {255, 0, 255,1000,1, 0, 0, 1, 0, 0},
+  {255, 0, 255,1000,1, 0, 1, 0, 1, 0},
+  {255, 0, 255,1000,1, 1, 0, 0, 0, 1},
   
-  {255,128,128,100,1, 1, 1, 1, 1, 1},
-  {255,128,128, 50,0, 1, 1, 1, 1, 1},
-  {255,128,128, 50,0, 1, 1, 1, 1, 1},
+  {255,128,128,1000,1, 1, 1, 1, 1, 1},
+  {255,128,128, 500,0, 1, 1, 1, 1, 1},
+  {255,128,128, 500,0, 1, 1, 1, 1, 1},
   
-  {255,128,128,200,1, 1, 0, 0, 0, 1},
-  (255,255,255,200,1, 0, 0, 0, 0, 1)
+  { 0, 255,255, 500,1, 1, 0, 1, 0, 1},
+  ( 0,   0,  0, 500,1, 1, 1, 1, 1, 1)
   };
 
 
@@ -388,6 +389,7 @@ void loop()
     }
     prevTouch=touch;
   }
+  Serial.println(touch);
   int direction = 1;
   if(Serial1.available() > 0)
     {
