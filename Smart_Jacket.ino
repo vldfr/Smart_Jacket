@@ -156,7 +156,6 @@ struct RGB{
   //r,g,b target values
   void fadeStep(int r, int g, int b, float curStep, int maxSteps)
   {
-    
     int difR, difG, difB;
     difR = r-rVal;
     difG = g-gVal;
@@ -174,20 +173,11 @@ struct RGB{
       gStep=((float)difG)/maxSteps;
       bStep=((float)difB)/maxSteps;
     }
-
-    float curR,curG,curB;
-    curR=rVal+rStep*curStep;
-    curG=gVal+gStep*curStep;
-    curB=bVal+bStep*curStep;
-    colorize((int)curR,(int)curG,(int)curB);
+    colorize((int)rVal+rStep*curStep,(int)gVal+gStep*curStep,(int)bVal+bStep*curStep);
   }
   int maxSteps(int r, int g, int b)
   {
-    int difR, difG, difB;
-    difR = r-rVal;
-    difG = g-gVal;
-    difB = b-bVal;
-    return max(abs(difR), max(abs(difG), abs(difB)));
+    return max(abs(r-rVal), max(abs(g-gVal), abs(b-bVal)));
   }
 };
 
@@ -213,7 +203,6 @@ void fadeSim(struct RGB leds[], bool ledsOn[], int nrleds, int r[], int g[], int
       Serial.println("Led "+(String)i+":"+leds[i].rVal+"  "+leds[i].gVal+"  "+leds[i].bVal);
       Serial.println("Color:"+(String)r[i]+"  "+g[i]+"  "+b[i]);
   }
-  
 #endif 
 
   for(int i = 0;i<=maximum;i++)
@@ -252,8 +241,6 @@ void fadeSim(struct RGB leds[], bool ledsOn[], int nrleds, int r, int g, int b, 
       maximum = mex;
     maxsteps[i]=mex;
   }
-
-
 #ifdef DEBUG  
   for(int i =0;i<nrleds;i++)
   {
@@ -273,7 +260,6 @@ void fadeSim(struct RGB leds[], bool ledsOn[], int nrleds, int r, int g, int b, 
         Serial.print((String)j+".) ");
 #endif      
         leds[j].fadeStep(r,g,b,((float)maxsteps[j]/maximum)*i,maxsteps[j]);
-        
       }
     }
 #ifdef DEBUG    
