@@ -476,7 +476,7 @@ void loop()
   if(Serial1.available() > 0)
     {
         str = Serial1.readStringUntil('~');
-        //Serial.println(str);
+        Serial.println(str);
         if(str=="An1")
         {
           mode = 1;
@@ -548,7 +548,7 @@ void loop()
           int tz=0;
           while(ptr)
           {
-            animation[tz++]=(int)ptr;
+            animation[tz++]=atoi(ptr);
             ptr=strtok(NULL, sep);
           }
           bool ledson[]= {animation[5],animation[6],animation[7],animation[8],animation[9]};
