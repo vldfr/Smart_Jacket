@@ -1,5 +1,7 @@
 //FDP = FOR DEBUGGING PURPOSES
 
+//#define DEBUG                           //Uncomment for debugging output!!!!
+
 /*
     Basic Pin setup:
     ------------                                  ---u----
@@ -90,7 +92,10 @@ struct RGB{
     Tlc.set(g_pin, g);
     Tlc.set(b_pin, b);
     Tlc.update();
-    //Serial.print(".");                                              //FDP
+    
+#ifdef DEBUG
+    Serial.print(".");                                              //FDP
+#endif
   }
   void Blink(int r, int g, int b, int dur, int times)
   {
@@ -105,6 +110,9 @@ struct RGB{
   }
   void colorize(int r, int g, int b)
   {
+#ifdef DEBUG
+    Serial.println((String)r+"  "+g+"  "+b+"  ");
+#endif    
     r*=16;
     g*=16;
     b*=16;
@@ -118,6 +126,7 @@ struct RGB{
     Tlc.set(g_pin, g);
     Tlc.set(b_pin, b);
     Tlc.update();
+    
   }
   void fade(int r, int g, int b, int miliX)
   {
@@ -131,10 +140,10 @@ struct RGB{
     difB = bVal-b;
     float maxSteps = max(abs(difR), max(abs(difG), abs(difB)));
     float rStep, gStep, bStep;
-    rStep=maxSteps/difR;
-    gStep=maxSteps/difG;
-    bStep=maxSteps/difB;
-    for(int i = 0;i<maxSteps;i++)
+    rStep=difR/maxSteps;
+    gStep=difG/maxSteps;
+    bStep=difB/maxSteps;
+    for(int i = 0;i<=maxSteps;i++)
     {
       curR-=rStep;
       curG-=gStep;
@@ -144,16 +153,215 @@ struct RGB{
     }
     //show(r,g,b);
   }
+  //r,g,b target values
+  void fadeStep(int r, int g, int b, float curStep)
+  {
+    float curR,curG,curB;
+    curR=rVal;
+    curG=gVal;
+    curB=bVal;
+    int difR, difG, difB;
+    difR = r-rVal;
+    difG = g-gVal;
+    difB = b-bVal;
+    int maxSteps = max(abs(difR), max(abs(difG), abs(difB)));
+    float rStep, gStep, bStep;
+    if(maxSteps == 0)
+    {
+      rStep=0;
+      gStep=0;
+      bStep=0;
+    }
+    else
+    {
+      rStep=((float)difR)/maxSteps;
+      gStep=((float)difG)/maxSteps;
+      bStep=((float)difB)/maxSteps;
+    }
+    
+    curR+=rStep*curStep;
+    curG+=gStep*curStep;
+    curB+=bStep*curStep;
+    colorize((int)curR,(int)curG,(int)curB);
+  }
+  int maxSteps(int r, int g, int b)
+  {
+    int difR, difG, difB;
+    difR = r-rVal;
+    difG = g-gVal;
+    difB = b-bVal;
+    return max(abs(difR), max(abs(difG), abs(difB)));
+  }
 };
+
+//STRUCT END
+
+void fadeSim(struct RGB leds[], bool ledsOn[], int nrleds, int r[], int g[], int b[],  int milis)
+{
+  int *maxsteps=0;
+  maxsteps=new int [nrleds];
+  int maximum = -1;
+  for(int i = 0;i<nrleds;i++)
+  {
+    float mex = leds[i].maxSteps(r[i],g[i],b[i]);
+    if(ledsOn[i]&&mex>maximum)
+      maximum = mex;
+    maxsteps[i]=mex;
+  }
+  //maxstepul fiecaruia/maximum este curstepul fiecaruia
+
+  for(int i = 0;i<=maximum;i++)
+  {
+    for(int j = 0;j<nrleds;j++)
+    {
+      if(ledsOn[j])
+        leds[j].fadeStep(r[j],g[j],b[j],maxsteps[j]/maximum*i);
+    }
+    delayMicroseconds(1000*(float)milis/maximum);
+    Tlc.update();
+    for(int i=0;i<nrleds;i++)
+    {
+      if(ledsOn[i])
+        leds[i].show(r[i],g[i],b[i]);
+    }
+  }
+}
+void fadeSim(struct RGB leds[], bool ledsOn[], int nrleds, int r, int g, int b, int milis)
+{
+  int *maxsteps=0;
+  maxsteps=new int [nrleds];
+  int maximum = -1;
+  for(int i = 0;i<nrleds;i++)
+  {
+    int mex = leds[i].maxSteps(r,g,b);
+    if(ledsOn[i]&&(mex>maximum))
+      maximum = mex;
+    maxsteps[i]=mex;
+  }
+
+
+#ifdef DEBUG  
+  for(int i =0;i<nrleds;i++)
+  {
+    if(ledsOn[i])
+      Serial.println("Led "+(String)i+":"+leds[i].rVal+"  "+leds[i].gVal+"  "+leds[i].bVal);
+  }
+  Serial.println(""+(String)r+"  "+g+"  "+b);
+#endif  
+
+  for(int i = 0;i<=maximum;i++)
+  {
+    for(int j = 0;j<nrleds;j++)
+    {
+      if(ledsOn[j])
+      {
+#ifdef DEBUG        
+        Serial.print((String)j+".) ");
+#endif      
+        leds[j].fadeStep(r,g,b,((float)maxsteps[j]/maximum)*i);
+        
+      }
+    }
+#ifdef DEBUG    
+    Serial.println();
+#endif
+    
+    delayMicroseconds(1000*(float)milis/maximum);
+    Tlc.update();
+  }
+  for(int i=0;i<nrleds;i++)
+  {
+    if(ledsOn[i])
+      leds[i].show(r,g,b);
+  }
+}
+void blinkSim(struct RGB leds[], bool ledsOn[], int nrleds, int r, int g, int b, int milis, int times=1)
+{
+  int nrLedsOn=0;
+  for(int i = 0;i<nrleds;i++)
+    if(ledsOn[i])
+      nrLedsOn++;
+  for(int j=0;j<times*2;j++)
+    for(int i=0;i<nrleds;i++)
+    {
+      if(ledsOn[i]&&j%2==0)
+      {
+        leds[i].show(r,g,b);
+        delay(milis/(nrLedsOn*times)/4);
+      }
+      else if(ledsOn[i]&&j%2==1)
+      {
+        leds[i].show(0,0,0);
+        delay(milis/(nrLedsOn*times)*3/4);
+      }
+    }
+}
+void blinkSim(struct RGB leds[], bool ledsOn[], int nrleds, int r[], int g[], int b[], int milis, int times=1)
+{
+  int nrLedsOn=0;
+  for(int i = 0;i<nrleds;i++)
+    if(ledsOn[i])
+      nrLedsOn++;
+  for(int j=0;j<times*2;j++)
+    for(int i=0;i<nrleds;i++)
+    {
+      if(ledsOn[i]&&j%2==0)
+      {
+        leds[i].show(r[i],g[i],b[i]);
+        delay(milis/(nrLedsOn*times)/4);
+      }
+      else if(ledsOn[i]&&j%2==1)
+      {
+        leds[i].show(0,0,0);
+        delay(milis/(nrLedsOn*times)*3/4);
+      }
+    }
+}
+void showSim(struct RGB leds[], bool ledsOn[], int nrleds, int r[], int g[], int b[], int milis)
+{
+  for(int i =0;i<nrleds;i++)
+    if(ledsOn[i])
+      leds[i].show(r[i],g[i],b[i]);
+  delay(milis);
+}
+void showSim(struct RGB leds[], bool ledsOn[], int nrleds, int r, int g, int b, int milis)
+{
+  for(int i =0;i<nrleds;i++)
+    if(ledsOn[i])
+      leds[i].show(r,g,b);
+  delay(milis);
+}
+
 
 //container variables
 String str;
 int Backlights=0, Frontlights=0,prevTouch=-1,curlcd=1;
-RGB led[3];
+int mode=0,curanim=-1, modeincr=0;
+RGB led[5];
+
+
+const int anim1[][10] = {
+//  R   G   B  ms mde l1,l2,l3,l4,l5
+  {255,255,255, 500,1, 1, 1, 1, 1, 1},
+  
+  {255, 0, 255,1000,1, 0, 0, 1, 0, 0},
+  {255, 0, 255,1000,1, 0, 1, 1, 1, 0},
+  {255, 0, 255,1000,1, 1, 1, 1, 1, 1},
+  
+  {128,128,128,1000,1, 1, 1, 1, 1, 1},
+  {128,128,128, 500,0, 1, 1, 1, 1, 1},
+  {128,128,128, 500,0, 1, 1, 1, 1, 1},
+  
+  { 0, 255,255,1500,1, 1, 0, 1, 0, 1},
+  { 0, 255,255,1500,0, 1, 0, 1, 0, 1},
+  
+  { 0,   0,  0, 500,1, 1, 1, 1, 1, 1}
+  };
+int anim1Steps=10;
+
 
 //pin variables
-RGB frontlight(9,10,11);
-RGB backlight(12,13,14);
+
 const int temp1Pin = A0, temp2Pin = A1, lightPin = A2, touchPin=23,lcdPin=24;
 void setup()
 {
@@ -166,12 +374,14 @@ void setup()
   
   //Comunication Inits
   Serial1.begin(9600);
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   //Leds and TLC Inits
   led[0]=RGB(0,1,2);
   led[1]=RGB(3,4,5);
   led[2]=RGB(6,7,8);
+  led[3]=RGB(9,10,11);
+  led[4]=RGB(12,13,14);
   Tlc.init();
   Tlc.clear();
   Tlc.update();
@@ -180,11 +390,15 @@ void setup()
   analogReference(EXTERNAL);
   delay(500);
 }
-unsigned short incr = 0;
+unsigned long incr = 0;
+
 void loop()
 {
   int touch=digitalRead(touchPin);
-                                          //Serial.println((String)prevTouch+" - "+(String)touch);      //FDP
+  touch = 0;
+  mode = 1;
+  curanim = 1;
+  
   if(prevTouch==-1)
   {
     if(touch==ON)
@@ -223,83 +437,143 @@ void loop()
     }
     prevTouch=touch;
   }
+#ifdef DEBUG  
+  Serial.println("Touched: "+(String)touch);
+#endif
   int direction = 1;
   if(Serial1.available() > 0)
     {
         str = Serial1.readStringUntil('S');
         //Serial.println(str);
         if(str=="F")
-          for(int i=0;i<3;i++)
-            led[i].show(255,255,0);
+        {
+          //for(int i=0;i<5;i++)
+          //  led[i].show(255,255,0);
+          mode = !mode;
+          curanim=1;
+          modeincr=incr;
+        }
         else if(str=="B")
-          for(int i=0;i<3;i++)
+        {
+          for(int i=0;i<5;i++)
             led[i].show(0,0,0);
+          mode = 0;
+        }
         else if(str=="L")
-          for(int i=0;i<3;i++)
+        {
+          for(int i=0;i<5;i++)
             led[i].show(255,0,255);
+          mode = 0;
+        }
         else if(str=="R")
-          for(int i=0;i<3;i++)
+        {
+          for(int i=0;i<5;i++)
             led[i].show(0,255,255);
+          mode = 0;
+        }
         else if(str == "U")
         {
           Backlights = 1;
-          backlight.show(255,0,0);
+          led[3].show(255,0,0);
+          led[4].show(255,0,0);
+          mode = 0;
         }
         else if(str == "u")
         {
           Backlights = 0;
-          backlight.Blink(128,128,0,400,2);
+          led[3].Blink(128,128,0,400,2);
+          led[4].Blink(128,128,0,400,2);
+          mode = 0;
         }
         else if(str == "W")
         {
           Frontlights = 1;
-          frontlight.show(255,255,255);
+          led[3].show(255,255,255);
+          led[4].show(255,255,255);
+          mode = 0;
         }
         else if(str == "w")
         {
           Frontlights = 0;
           //frontlight.fade(0,128,128,500);
-          frontlight.fade(0,0,0,1000);
+          bool ledsoned[]={0,0,0,1,1};
+          fadeSim(led,ledsoned,5,0,0,0,1000);
+          mode = 0;
         }
         else
         {
-          for(int i=0;i<3;i++)
+          for(int i=0;i<5;i++)
             led[i].show(0,0,0);
           //Serial1.println("Error");                                               //FDP
+          mode = 0;
         }
         
     }
-    lcd.clear();
-    lcd.setCursor(0, 1);
+
+    if(mode)
+    {
+      unsigned int times = incr-modeincr;
+      switch(curanim)
+      {
+        case 1:
+          int animat[10];
+#ifdef DEBUG
+              Serial.println("##############################################"+(String)(times%anim1Steps)); 
+#endif       
+          for(int i = 0;i<10;i++)
+          {
+            animat[i] = anim1[times%anim1Steps][i];
+#ifdef DEBUG            
+            Serial.print(animat[i]);
+            Serial.print(" ");
+#endif            
+          }
+#ifdef DEBUG          
+          Serial.println();
+#endif          
+          bool ledson[]= {animat[5],animat[6],animat[7],animat[8],animat[9]};
+          if(animat[4]==0)
+            showSim(led,ledson,5,animat[0],animat[1],animat[2],animat[3]);
+          else
+            fadeSim(led,ledson,5,animat[0],animat[1],animat[2],animat[3]);
+          break;
+      }
+    }
 
     delay(50);
     
     int val = analogRead(temp1Pin);   
     float temperature = (5.0 * val * 100.0)/1024.0;
-    //Serial.println(temperature);                                                  //FDP
-   
-    lcd.print(temperature);
-    lcd.setCursor(7, 1);
-
+#ifdef DEBUG    
+    Serial.println("Temp1: "+(String)temperature+"°");                                                  //FDP
+#endif    
     delay(50);
     
     val = analogRead(temp2Pin);   
     float temperature2 = (5.0 * val * 100.0)/1024.0;
-    
-    lcd.print(temperature2);
-    lcd.setCursor(0,0);
+#ifdef DEBUG    
+    Serial.println("Temp2: "+(String)temperature2+"°");                                                  //FDP
+#endif   
     
     delay(50);
     int light = analogRead(lightPin);
-    
+#ifdef DEBUG    
+    Serial.println("Light: "+(String)light);                                                  //FDP
+#endif   
+    lcd.clear();
+    lcd.setCursor(0, 1);
+    lcd.print(temperature);
+    lcd.setCursor(7, 1);
+    lcd.print(temperature2);
+    lcd.setCursor(0,0);    
     lcd.print(light);
     
     if(incr%5==0)
     {
       String sends = (String)temperature+" "+temperature2+" "+light+" "+curlcd;
       Serial1.println(sends);
-      incr=0;
     }
+    
     Tlc.update();
     delay(50);
     incr++;
