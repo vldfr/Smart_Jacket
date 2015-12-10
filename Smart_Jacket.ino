@@ -332,6 +332,7 @@ void showSim(struct RGB leds[], bool ledsOn[], int nrleds, int r, int g, int b, 
   delay(milis);
 }
 
+<<<<<<< HEAD
 void animate(struct RGB led[], int times,int animSteps, const int anim[][10])
 {
   int animat[10];
@@ -357,6 +358,8 @@ void animate(struct RGB led[], int times,int animSteps, const int anim[][10])
 }
 
 
+=======
+>>>>>>> origin/master
 
 //container variables
 String str;
@@ -384,6 +387,7 @@ const int anim1[][10] = {
   };
 int anim1Steps=10;
 
+<<<<<<< HEAD
 const int anim2[][10]={
   {  0,255,  0,200,1, 1, 1, 1, 1, 1},
   {  0,200,255,200,1, 1, 0, 0, 0, 1},
@@ -393,6 +397,8 @@ const int anim2[][10]={
   {  0,  0,255,200,1, 1, 1, 1, 1, 1},
 };
 const int anim2Steps=6;
+=======
+>>>>>>> origin/master
 
 //pin variables
 
@@ -429,6 +435,12 @@ unsigned long incr = 0;
 void loop()
 {
   int touch=digitalRead(touchPin);
+<<<<<<< HEAD
+=======
+  touch = 0;
+  mode = 1;
+  curanim = 1;
+>>>>>>> origin/master
   
   if(prevTouch==-1)
   {
@@ -476,6 +488,7 @@ void loop()
     {
         str = Serial1.readStringUntil('~');
         //Serial.println(str);
+<<<<<<< HEAD
         if(str=="An1")
         {
           mode = 1;
@@ -488,6 +501,16 @@ void loop()
           curanim=2;
           modeincr=incr;
         }
+=======
+        if(str=="F")
+        {
+          //for(int i=0;i<5;i++)
+          //  led[i].show(255,255,0);
+          mode = !mode;
+          curanim=1;
+          modeincr=incr;
+        }
+>>>>>>> origin/master
         else if(str=="B")
         {
           for(int i=0;i<5;i++)
@@ -551,10 +574,33 @@ void loop()
       switch(curanim)
       {
         case 1:
+<<<<<<< HEAD
           animate(led, times, anim1Steps, anim1);
           break;
         case 2:
           animate(led, times, anim2Steps, anim2);
+=======
+          int animat[10];
+#ifdef DEBUG
+              Serial.println("##############################################"+(String)(times%anim1Steps)); 
+#endif       
+          for(int i = 0;i<10;i++)
+          {
+            animat[i] = anim1[times%anim1Steps][i];
+#ifdef DEBUG            
+            Serial.print(animat[i]);
+            Serial.print(" ");
+#endif            
+          }
+#ifdef DEBUG          
+          Serial.println();
+#endif          
+          bool ledson[]= {animat[5],animat[6],animat[7],animat[8],animat[9]};
+          if(animat[4]==0)
+            showSim(led,ledson,5,animat[0],animat[1],animat[2],animat[3]);
+          else
+            fadeSim(led,ledson,5,animat[0],animat[1],animat[2],animat[3]);
+>>>>>>> origin/master
           break;
       }
     }
