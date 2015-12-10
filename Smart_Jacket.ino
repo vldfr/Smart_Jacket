@@ -154,17 +154,13 @@ struct RGB{
     //show(r,g,b);
   }
   //r,g,b target values
-  void fadeStep(int r, int g, int b, float curStep)
+  void fadeStep(int r, int g, int b, float curStep, int maxSteps)
   {
-    float curR,curG,curB;
-    curR=rVal;
-    curG=gVal;
-    curB=bVal;
+    
     int difR, difG, difB;
     difR = r-rVal;
     difG = g-gVal;
     difB = b-bVal;
-    int maxSteps = max(abs(difR), max(abs(difG), abs(difB)));
     float rStep, gStep, bStep;
     if(maxSteps == 0)
     {
@@ -178,10 +174,11 @@ struct RGB{
       gStep=((float)difG)/maxSteps;
       bStep=((float)difB)/maxSteps;
     }
-    
-    curR+=rStep*curStep;
-    curG+=gStep*curStep;
-    curB+=bStep*curStep;
+
+    float curR,curG,curB;
+    curR=rVal+rStep*curStep;
+    curG=gVal+gStep*curStep;
+    curB=bVal+bStep*curStep;
     colorize((int)curR,(int)curG,(int)curB);
   }
   int maxSteps(int r, int g, int b)
@@ -208,15 +205,32 @@ void fadeSim(struct RGB leds[], bool ledsOn[], int nrleds, int r[], int g[], int
       maximum = mex;
     maxsteps[i]=mex;
   }
-  //maxstepul fiecaruia/maximum este curstepul fiecaruia
+
+#ifdef DEBUG  
+  for(int i =0;i<nrleds;i++)
+  {
+    if(ledsOn[i])
+      Serial.println("Led "+(String)i+":"+leds[i].rVal+"  "+leds[i].gVal+"  "+leds[i].bVal);
+      Serial.println("Color:"+(String)r[i]+"  "+g[i]+"  "+b[i]);
+  }
+  
+#endif 
 
   for(int i = 0;i<=maximum;i++)
   {
     for(int j = 0;j<nrleds;j++)
     {
       if(ledsOn[j])
-        leds[j].fadeStep(r[j],g[j],b[j],maxsteps[j]/maximum*i);
+      {
+#ifdef DEBUG        
+        Serial.print((String)j+".) ");
+#endif      
+        leds[j].fadeStep(r[j],g[j],b[j],((float)maxsteps[j]/maximum)*i,maxsteps[j]);
+      }
     }
+#ifdef DEBUG    
+    Serial.println();
+#endif
     delayMicroseconds(1000*(float)milis/maximum);
     Tlc.update();
     for(int i=0;i<nrleds;i++)
@@ -258,7 +272,7 @@ void fadeSim(struct RGB leds[], bool ledsOn[], int nrleds, int r, int g, int b, 
 #ifdef DEBUG        
         Serial.print((String)j+".) ");
 #endif      
-        leds[j].fadeStep(r,g,b,((float)maxsteps[j]/maximum)*i);
+        leds[j].fadeStep(r,g,b,((float)maxsteps[j]/maximum)*i,maxsteps[j]);
         
       }
     }
@@ -535,6 +549,24 @@ void loop()
           bool ledsoned[]={0,0,0,1,1};
           fadeSim(led,ledsoned,5,0,0,0,1000);
           mode = 0;
+        }
+        else if(str[0]=='[')
+        {
+          char charBuff[50];
+          str.toCharArray(charBuff,50);
+          strcpy(charBuff,charBuff+1);
+          charBuff[strlen(charBuff)-1]=0;
+          char sep[]={", "};
+          char *ptr = strtok(charBuff,sep);
+          int animation[10];
+          int tz=0;
+          while(ptr)
+          {
+            animation[tz++]=(int)ptr;
+            ptr=strtok(NULL, sep);
+          }
+          bool ledson[]= {animation[5],animation[6],animation[7],animation[8],animation[9]};
+          fadeSim(led,ledson,5,animation[0],animation[1],animation[2],animation[3]);
         }
         else
         {
