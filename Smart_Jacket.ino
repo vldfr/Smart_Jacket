@@ -395,6 +395,18 @@ const int anim2[][10]={
 };
 const int anim2Steps=7;
 
+const int anim3[][10]={
+  {  0,  0,  0,200,1, 0, 1, 0, 1, 0},
+  {  0,  0,255,200,1, 1, 0, 1, 0, 1},
+  {  0,255,130,200,1, 1, 0, 0, 0, 1},
+  {  0,255,130,200,1, 1, 1, 0, 1, 1},
+  {  0,255,130,200,1, 1, 1, 1, 1, 1},
+  {128,128,200,200,1, 1, 1, 1, 1, 1},
+  { 50,150, 50,200,1, 0, 1, 0, 1, 0},
+};
+const int anim3Steps=7;
+
+
 //pin variables
 
 const int temp1Pin = A0, temp2Pin = A1, lightPin = A2, touchPin=23,lcdPin=24;
@@ -489,6 +501,12 @@ void loop()
           curanim=2;
           modeincr=incr;
         }
+        else if(str=="An3")
+        {
+          mode = 1;
+          curanim=3;
+          modeincr=incr;
+        }
         else if(str=="B")
         {
           for(int i=0;i<5;i++)
@@ -575,6 +593,9 @@ void loop()
         case 2:
           animate(led, times, anim2Steps, anim2);
           break;
+       case 3:
+          animate(led, times, anim3Steps, anim3);
+          break;
       }
     }
 
@@ -604,7 +625,7 @@ void loop()
     lcd.setCursor(7, 1);
     lcd.print(temperature2);
     lcd.setCursor(0,0);    
-    lcd.print(light);
+    lcd.print("light:"+(String)light);
     
     if(incr%5==0)
     {
