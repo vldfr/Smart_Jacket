@@ -360,52 +360,52 @@ void animate(struct RGB led[], int times,int animSteps, const int anim[][10])
 
 //container variables
 String str;
-int Backlights=0, Frontlights=0,prevTouch=-1,curlcd=1;
+int Backlights=0, Frontlights=0,prevTouch=-1,curlcd=1,autoLcd=1,changedlcd=0;
 int mode=0,curanim=-1, modeincr=0;
 RGB led[5];
 
 
-const int anim1[][10] = {
-//  R   G   B  ms mde l1,l2,l3,l4,l5
-  {255,255,255, 500,1, 1, 1, 1, 1, 1},
+const int anims[][15][10] = {
+  {
+  //  R   G   B  ms mde l1,l2,l3,l4,l5
+    {255,255,255, 500,1, 1, 1, 1, 1, 1},
+    
+    {255, 0, 255,1000,1, 0, 0, 1, 0, 0},
+    {255, 0, 255,1000,1, 0, 1, 1, 1, 0},
+    {255, 0, 255,1000,1, 1, 1, 1, 1, 1},
+    
+    {128,128,128,1000,1, 1, 1, 1, 1, 1},
+    {128,128,128, 500,0, 1, 1, 1, 1, 1},
+    {128,128,128, 500,0, 1, 1, 1, 1, 1},
+    
+    { 0, 255,255,1500,1, 1, 0, 1, 0, 1},
+    { 0, 255,255,1500,0, 1, 0, 1, 0, 1},
+    
+    { 0,   0,  0, 500,1, 1, 1, 1, 1, 1}
+  },
   
-  {255, 0, 255,1000,1, 0, 0, 1, 0, 0},
-  {255, 0, 255,1000,1, 0, 1, 1, 1, 0},
-  {255, 0, 255,1000,1, 1, 1, 1, 1, 1},
+  {
+    {  0,255,  0,200,1, 1, 1, 1, 1, 1},
+    {  0,200,255,200,1, 1, 0, 0, 0, 1},
+    {255,128,  0,200,1, 0, 1, 0, 1, 0},
+    {  0,  0,255,200,1, 0, 0, 1, 0, 0},
+    {255,255,255,200,1, 1, 1, 1, 1, 1},
+    {  0,  0,255,200,1, 1, 1, 1, 1, 1},
+    {255,  0,  0,200,1, 1, 1, 1, 1, 1},
+  },
   
-  {128,128,128,1000,1, 1, 1, 1, 1, 1},
-  {128,128,128, 500,0, 1, 1, 1, 1, 1},
-  {128,128,128, 500,0, 1, 1, 1, 1, 1},
-  
-  { 0, 255,255,1500,1, 1, 0, 1, 0, 1},
-  { 0, 255,255,1500,0, 1, 0, 1, 0, 1},
-  
-  { 0,   0,  0, 500,1, 1, 1, 1, 1, 1}
-  };
-int anim1Steps=10;
-
-const int anim2[][10]={
-  {  0,255,  0,200,1, 1, 1, 1, 1, 1},
-  {  0,200,255,200,1, 1, 0, 0, 0, 1},
-  {255,128,  0,200,1, 0, 1, 0, 1, 0},
-  {  0,  0,255,200,1, 0, 0, 1, 0, 0},
-  {255,255,255,200,1, 1, 1, 1, 1, 1},
-  {  0,  0,255,200,1, 1, 1, 1, 1, 1},
-  {255,  0,  0,200,1, 1, 1, 1, 1, 1},
+  {
+    {  0,  0,  0,200,1, 0, 1, 0, 1, 0},
+    {  0,  0,255,200,1, 1, 0, 1, 0, 1},
+    {  0,255,130,200,1, 1, 0, 0, 0, 1},
+    {  0,255,130,200,1, 1, 1, 0, 1, 1},
+    {  0,255,130,200,1, 1, 1, 1, 1, 1},
+    {128,128,200,200,1, 1, 1, 1, 1, 1},
+    { 50,150, 50,200,1, 0, 1, 0, 1, 0},
+  }
 };
-const int anim2Steps=7;
-
-const int anim3[][10]={
-  {  0,  0,  0,200,1, 0, 1, 0, 1, 0},
-  {  0,  0,255,200,1, 1, 0, 1, 0, 1},
-  {  0,255,130,200,1, 1, 0, 0, 0, 1},
-  {  0,255,130,200,1, 1, 1, 0, 1, 1},
-  {  0,255,130,200,1, 1, 1, 1, 1, 1},
-  {128,128,200,200,1, 1, 1, 1, 1, 1},
-  { 50,150, 50,200,1, 0, 1, 0, 1, 0},
-};
-const int anim3Steps=7;
-
+const int animSteps[3]={10,7,7};
+const int NrAnims=3;
 
 //pin variables
 
@@ -443,43 +443,35 @@ void loop()
 {
   int touch=digitalRead(touchPin);
   
-  if(prevTouch==-1)
+  if(prevTouch==-1&&autoLcd)
   {
     if(touch==ON)
     {
-      if(curlcd)
-      {
-        lcd.noDisplay();
-        digitalWrite(lcdPin,LOW);
-        curlcd=!curlcd;
-      }
-      else
-      {
-        lcd.display();
-        digitalWrite(lcdPin,HIGH);
-        curlcd=!curlcd;
-      }
+      curlcd=!curlcd;
+      changedlcd=1;
     }
     prevTouch=touch;
   } 
-  else
+  else if(autoLcd)
   {
     if(prevTouch==OFF&&touch==ON)
     {
-      if(curlcd)
-      {
-        lcd.noDisplay();
-        digitalWrite(lcdPin,LOW);
-        curlcd=!curlcd;
-      }
-      else
-      {
-        lcd.display();
-        digitalWrite(lcdPin,HIGH);
-        curlcd=!curlcd;
-      }
+      curlcd=!curlcd;
+      changedlcd=1;
     }
     prevTouch=touch;
+  }
+  if(!curlcd&&changedlcd)
+  {
+    lcd.noDisplay();
+    digitalWrite(lcdPin,LOW);
+    changedlcd=0;
+  }
+  else if(changedlcd)
+  {
+    lcd.display();
+    digitalWrite(lcdPin,HIGH);
+    changedlcd=0;
   }
 #ifdef DEBUG  
   Serial.println("Touched: "+(String)touch);
@@ -489,23 +481,28 @@ void loop()
     {
         str = Serial1.readStringUntil('~');
         Serial.println(str);
-        if(str=="An1")
+        if(str[0]=='A'&&str[1]=='n')
         {
-          mode = 1;
-          curanim=1;
-          modeincr=incr;
+          char charBuff[20];
+          str.toCharArray(charBuff,20);
+          strcpy(charBuff,charBuff+2);
+          curanim=atoi(charBuff);
+          if(!(curanim<NrAnims))
+          {
+            mode = 0;
+            curanim=0;
+            Serial1.println("NoAnim");
+            delay(20);
+          }
+          else
+          {
+            mode = 1;
+            modeincr = incr;
+          }
         }
-        else if(str=="An2")
+        else if(str=="togLcd")
         {
-          mode = 1;
-          curanim=2;
-          modeincr=incr;
-        }
-        else if(str=="An3")
-        {
-          mode = 1;
-          curanim=3;
-          modeincr=incr;
+          autoLcd=!autoLcd;
         }
         else if(str=="B")
         {
@@ -554,6 +551,16 @@ void loop()
           fadeSim(led,ledsoned,5,0,0,0,1000);
           mode = 0;
         }
+        else if(str == "enLcd")
+        {
+          curlcd=1;
+          changedlcd=1;
+        }
+        else if(str == "disLcd")
+        {
+          curlcd=0;
+          changedlcd=1;
+        }
         else if(str[0]=='[')
         {
           char charBuff[50];
@@ -585,18 +592,7 @@ void loop()
     if(mode)
     {
       unsigned int times = incr-modeincr;
-      switch(curanim)
-      {
-        case 1:
-          animate(led, times, anim1Steps, anim1);
-          break;
-        case 2:
-          animate(led, times, anim2Steps, anim2);
-          break;
-       case 3:
-          animate(led, times, anim3Steps, anim3);
-          break;
-      }
+      animate(led, times, animSteps[curanim], anims[curanim]);
     }
 
     delay(50);
@@ -629,7 +625,7 @@ void loop()
     
     if(incr%5==0)
     {
-      String sends = (String)temperature+" "+temperature2+" "+light+" "+curlcd;
+      String sends = (String)temperature+" "+temperature2+" "+light+" "+curlcd+" "+autoLcd;
       Serial1.println(sends);
     }
     
